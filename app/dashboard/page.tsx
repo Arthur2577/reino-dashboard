@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     return {
       userId: r.user_id,
       username: u?.username || "Rei Desconhecido",
-      avatar: u?.avatar,
+      avatar: u?.avatar || null,
       gold: r.gold !== null && r.gold !== undefined ? Number(r.gold) : 0,
       armyPower: r.army_power || 0,
     };
@@ -57,7 +57,7 @@ export default async function DashboardPage() {
               <img
                 src={session.user.image}
                 alt={session.user.name || "Avatar"}
-                className="w-14 h-14 rounded-full border-2 border-amber-500/60 shadow-lg shadow-amber-500/10"
+                className="w-14 h-14 rounded-full border-2 border-amber-500/60 shadow-lg shadow-amber-500/10 object-cover"
               />
             ) : (
               <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center text-xl font-bold text-black border-2 border-amber-300">
@@ -83,6 +83,16 @@ export default async function DashboardPage() {
                 ⚙️ Painel Admin
               </Link>
             )}
+
+            {/* 🚪 BOTÃO DE LOGOUT (Feito com a rota oficial de encerramento do NextAuth) */}
+            <form action="/api/auth/signout" method="POST">
+              <button
+                type="submit"
+                className="px-3 py-1.5 text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition cursor-pointer"
+              >
+                🚪 Sair
+              </button>
+            </form>
           </div>
         </div>
 
@@ -209,35 +219,55 @@ export default async function DashboardPage() {
 
             <div className="space-y-2.5">
               {ranking.length > 0 ? (
-                ranking.map((player, idx) => (
-                  <div
-                    key={player.userId}
-                    className="flex items-center justify-between p-3 rounded-xl bg-gray-800/40 border border-gray-800/80 hover:bg-gray-800/80 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`font-black text-xs w-5 text-center ${
-                          idx === 0
-                            ? "text-yellow-400 text-sm"
-                            : idx === 1
-                            ? "text-gray-300"
-                            : idx === 2
-                            ? "text-amber-600"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        #{idx + 1}
-                      </span>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-200">{player.username}</p>
-                        <p className="text-[10px] text-gray-400">⚔️ {player.armyPower} Poder</p>
+                ranking.map((player, idx) => {
+                  const avatarUrl = player.avatar
+                    ? `https://cdn.discordapp.com/avatars/${player.userId}/${player.avatar}.png`
+                    : null;
+
+                  return (
+                    <div
+                      key={player.userId}
+                      className="flex items-center justify-between p-3 rounded-xl bg-gray-800/40 border border-gray-800/80 hover:bg-gray-800/80 transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`font-black text-xs w-5 text-center ${
+                            idx === 0
+                              ? "text-yellow-400 text-sm"
+                              : idx === 1
+                              ? "text-gray-300"
+                              : idx === 2
+                              ? "text-amber-600"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          #{idx + 1}
+                        </span>
+
+                        {/* 🖼️ AVATAR DO DISCORD NO RANKING */}
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={player.username}
+                            className="w-7 h-7 rounded-full border border-gray-700 object-cover"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-300 border border-gray-600">
+                            {player.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+
+                        <div>
+                          <p className="text-xs font-semibold text-gray-200">{player.username}</p>
+                          <p className="text-[10px] text-gray-400">⚔️ {player.armyPower} Poder</p>
+                        </div>
                       </div>
+                      <span className="text-xs font-bold text-amber-400">
+                        {player.gold.toLocaleString("pt-BR")} 🪙
+                      </span>
                     </div>
-                    <span className="text-xs font-bold text-amber-400">
-                      {player.gold.toLocaleString("pt-BR")} 🪙
-                    </span>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-xs text-gray-500 text-center py-6">Nenhum reino no ranking.</p>
               )}
