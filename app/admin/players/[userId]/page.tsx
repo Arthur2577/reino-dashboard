@@ -40,7 +40,7 @@ export default async function PlayerDetailPage({
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-violet-400 rounded-full blur opacity-60" />
-                <UserAvatar avatarUrl={user.avatar} username={user.username} size="lg" />
+                <UserAvatar avatarUrl={user.avatar} username={user.username} />
               </div>
               <div>
                 <h1 className="text-3xl font-black text-white">{user.username}</h1>
