@@ -4,17 +4,30 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { RankingTable } from "@/components/RankingTable";
 import { RecentUsersList } from "@/components/RecentUsersList";
+import { PlayerSearchBar } from "@/components/PlayerSearchBar";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const { totalUsers, totalGuilds, realms, users, profilesById } = await getAdminDashboardData();
 
   return (
     <main className="min-h-screen bg-background p-6 text-white md:p-10">
       <PageHeader eyebrow="Área restrita" title="Dashboard do Bot" />
 
-      <Link href="/dashboard" className="mb-6 inline-block text-sm text-accent-text hover:underline">
-        ← Ver meu painel de jogador
-      </Link>
+      <div className="mb-6 flex items-center justify-between">
+        <Link href="/dashboard" className="text-sm text-accent-text hover:underline">
+          ← Ver meu painel de jogador
+        </Link>
+        <Link href="/admin/guilds" className="text-sm text-accent-text hover:underline">
+          Ver servidores configurados →
+        </Link>
+      </div>
+
+      <PlayerSearchBar query={q} />
 
       <section className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
         <StatCard label="Total de jogadores" value={totalUsers} />

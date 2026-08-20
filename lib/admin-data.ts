@@ -24,3 +24,31 @@ export async function getAdminDashboardData() {
 
   return { totalUsers, totalGuilds, realms, users, profilesById };
 }
+
+export async function searchUsers(query: string) {
+  if (!query.trim()) return [];
+
+  return prisma.users.findMany({
+    where: {
+      OR: [
+        { username: { contains: query, mode: "insensitive" } },
+        { user_id: { contains: query } },
+      ],
+    },
+    take: 20,
+    select: { user_id: true, username: true, avatar: true },
+  });
+}
+
+export async function getPlayerDetail(userId: string) {
+  const [user, realm] = await Promise.all([
+    prisma.users.findUnique({ where: { user_id: userId } }),
+    prisma.realms.findUnique({ where: { user_id: userId } }),
+  ]);
+
+  return { user, realm };
+}
+
+export async function getGuildSettings() {
+  return prisma.guild_settings.findMany();
+}
