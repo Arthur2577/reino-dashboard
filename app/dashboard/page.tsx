@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { authOptions, isAdmin } from "@/lib/auth";
 import { getUserRealm } from "@/lib/realm-data";
 import { prisma } from "@/lib/prisma";
@@ -8,11 +7,7 @@ import { prisma } from "@/lib/prisma";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
-    redirect("/login");
-  }
-
-  const userId = (session.user as { id?: string } | undefined)?.id;
+  const userId = (session?.user as { id?: string } | undefined)?.id;
   const realm = userId ? await getUserRealm(userId) : null;
 
   // 🏆 1. BUSCA O TOP 10 NO BANCO PARA A COLUNA DA DIREITA
@@ -53,10 +48,10 @@ export default async function DashboardPage() {
         {/* 👑 HEADER DO REINO */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-6">
           <div className="flex items-center gap-4">
-            {session.user?.image ? (
+            {session?.user?.image ? (
               <img
-                src={session.user.image}
-                alt={session.user.name || "Avatar"}
+                src={session?.user?.image ?? ""}
+                alt={session?.user?.name || "Avatar"}
                 className="w-14 h-14 rounded-full border-2 border-amber-500/60 shadow-lg shadow-amber-500/10 object-cover"
               />
             ) : (
@@ -69,7 +64,7 @@ export default async function DashboardPage() {
                 Painel do Jogador
               </span>
               <h1 className="text-2xl font-black text-white">
-                Reino de {session.user?.name ?? "Rei"}
+                Reino de {session?.user?.name ?? "Rei"}
               </h1>
             </div>
           </div>
