@@ -22,16 +22,40 @@ export default async function DashboardPage() {
     select: { user_id: true, username: true, avatar: true },
   });
 
-  const ranking = topRealms.map((r) => {
-    const u = usersData.find((user) => user.user_id === r.user_id);
-    return {
-      userId: r.user_id,
-      username: u?.username || "Rei Desconhecido",
-      avatar: u?.avatar || null,
-      gold: r.gold !== null && r.gold !== undefined ? Number(r.gold) : 0,
-      armyPower: r.army_power || 0,
-    };
-  });
+  // 🏆 RANKINGS DIFERENTES
+  const buildRanking = (field: string) => {
+    const sorted = [...topRealms]
+      .sort((a, b) => {
+        const aVal = field === "gold" ? Number(a.gold ?? 0) : 
+                    field === "army" ? Number(a.army_power ?? 0) :
+                    field === "vault" ? Number(a.safe_vault ?? 0) :
+                    (a.wall_level ?? 1) + (a.vault_level ?? 1);
+        const bVal = field === "gold" ? Number(b.gold ?? 0) :
+                    field === "army" ? Number(b.army_power ?? 0) :
+                    field === "vault" ? Number(b.safe_vault ?? 0) :
+                    (b.wall_level ?? 1) + (b.vault_level ?? 1);
+        return bVal - aVal;
+      })
+      .slice(0, 5)
+      .map((r) => {
+        const u = usersData.find((user) => user.user_id === r.user_id);
+        return {
+          userId: r.user_id,
+          username: u?.username || "Rei Desconhecido",
+          avatar: u?.avatar || null,
+          gold: r.gold !== null && r.gold !== undefined ? Number(r.gold) : 0,
+          armyPower: r.army_power || 0,
+          safeVault: r.safe_vault !== null && r.safe_vault !== undefined ? Number(r.safe_vault) : 0,
+          fortificacao: (r.wall_level ?? 1) + (r.vault_level ?? 1),
+        };
+      });
+    return sorted;
+  };
+
+  const rankingGold = buildRanking("gold");
+  const rankingArmy = buildRanking("army");
+  const rankingVault = buildRanking("vault");
+  const rankingFortificacao = buildRanking("fort");
 
   const now = Date.now();
 
@@ -201,71 +225,155 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* 🏆 COLUNA DIREITA: RANKING TOP 10 */}
-          <div className="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl h-fit space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                🏆 Top 10 Reinos
-              </h3>
-              <span className="text-[10px] uppercase font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
-                Por Fortuna
-              </span>
+          {/* 🏆 COLUNA DIREITA: RANKINGS */}
+          <div className="space-y-6">
+            
+            {/* 💰 RANKING POR OURO */}
+            <div className="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  💰 Top Riqueza
+                </h3>
+                <span className="text-[10px] uppercase font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+                  Ouro
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {rankingGold.length > 0 ? (
+                  rankingGold.map((player, idx) => {
+                    const avatarUrl = player.avatar
+                      ? `https://cdn.discordapp.com/avatars/${player.userId}/${player.avatar}.png`
+                      : null;
+                    return (
+                      <div key={player.userId} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-800/40 border border-gray-800/80 hover:bg-gray-800/80 transition">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-black text-xs w-5 text-center ${idx === 0 ? "text-yellow-400 text-sm" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-gray-600"}`}>#{idx + 1}</span>
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt={player.username} className="w-6 h-6 rounded-full border border-gray-700 object-cover" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-[9px] font-bold text-gray-300">{player.username.charAt(0)}</div>
+                          )}
+                          <p className="text-xs font-semibold text-gray-200">{player.username}</p>
+                        </div>
+                        <span className="text-xs font-bold text-amber-400">{player.gold.toLocaleString("pt-BR")}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-gray-500 text-center py-4">Nenhum reino.</p>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-2.5">
-              {ranking.length > 0 ? (
-                ranking.map((player, idx) => {
-                  const avatarUrl = player.avatar
-                    ? `https://cdn.discordapp.com/avatars/${player.userId}/${player.avatar}.png`
-                    : null;
-
-                  return (
-                    <div
-                      key={player.userId}
-                      className="flex items-center justify-between p-3 rounded-xl bg-gray-800/40 border border-gray-800/80 hover:bg-gray-800/80 transition"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`font-black text-xs w-5 text-center ${
-                            idx === 0
-                              ? "text-yellow-400 text-sm"
-                              : idx === 1
-                              ? "text-gray-300"
-                              : idx === 2
-                              ? "text-amber-600"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          #{idx + 1}
-                        </span>
-
-                        {/* 🖼️ AVATAR DO DISCORD NO RANKING */}
-                        {avatarUrl ? (
-                          <img
-                            src={avatarUrl}
-                            alt={player.username}
-                            className="w-7 h-7 rounded-full border border-gray-700 object-cover"
-                          />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-300 border border-gray-600">
-                            {player.username.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-
-                        <div>
+            {/* ⚔️ RANKING POR PODER MILITAR */}
+            <div className="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  ⚔️ Top Guerreiros
+                </h3>
+                <span className="text-[10px] uppercase font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
+                  Exército
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {rankingArmy.length > 0 ? (
+                  rankingArmy.map((player, idx) => {
+                    const avatarUrl = player.avatar
+                      ? `https://cdn.discordapp.com/avatars/${player.userId}/${player.avatar}.png`
+                      : null;
+                    return (
+                      <div key={player.userId} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-800/40 border border-gray-800/80 hover:bg-gray-800/80 transition">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-black text-xs w-5 text-center ${idx === 0 ? "text-red-400 text-sm" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-red-600" : "text-gray-600"}`}>#{idx + 1}</span>
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt={player.username} className="w-6 h-6 rounded-full border border-gray-700 object-cover" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-[9px] font-bold text-gray-300">{player.username.charAt(0)}</div>
+                          )}
                           <p className="text-xs font-semibold text-gray-200">{player.username}</p>
-                          <p className="text-[10px] text-gray-400">⚔️ {player.armyPower} Poder</p>
                         </div>
+                        <span className="text-xs font-bold text-red-400">{player.armyPower.toLocaleString("pt-BR")}</span>
                       </div>
-                      <span className="text-xs font-bold text-amber-400">
-                        {player.gold.toLocaleString("pt-BR")} 🪙
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-xs text-gray-500 text-center py-6">Nenhum reino no ranking.</p>
-              )}
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-gray-500 text-center py-4">Nenhum reino.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 🏛️ RANKING POR COFRE SEGURO */}
+            <div className="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  🏛️ Top Segurança
+                </h3>
+                <span className="text-[10px] uppercase font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">
+                  Cofre
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {rankingVault.length > 0 ? (
+                  rankingVault.map((player, idx) => {
+                    const avatarUrl = player.avatar
+                      ? `https://cdn.discordapp.com/avatars/${player.userId}/${player.avatar}.png`
+                      : null;
+                    return (
+                      <div key={player.userId} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-800/40 border border-gray-800/80 hover:bg-gray-800/80 transition">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-black text-xs w-5 text-center ${idx === 0 ? "text-blue-400 text-sm" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-blue-600" : "text-gray-600"}`}>#{idx + 1}</span>
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt={player.username} className="w-6 h-6 rounded-full border border-gray-700 object-cover" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-[9px] font-bold text-gray-300">{player.username.charAt(0)}</div>
+                          )}
+                          <p className="text-xs font-semibold text-gray-200">{player.username}</p>
+                        </div>
+                        <span className="text-xs font-bold text-blue-400">{player.safeVault.toLocaleString("pt-BR")}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-gray-500 text-center py-4">Nenhum reino.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 🧱 RANKING POR FORTIFICAÇÕES */}
+            <div className="bg-gray-900/90 border border-gray-800 p-5 rounded-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  🧱 Top Construtor
+                </h3>
+                <span className="text-[10px] uppercase font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                  Nível
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {rankingFortificacao.length > 0 ? (
+                  rankingFortificacao.map((player, idx) => {
+                    const avatarUrl = player.avatar
+                      ? `https://cdn.discordapp.com/avatars/${player.userId}/${player.avatar}.png`
+                      : null;
+                    return (
+                      <div key={player.userId} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-800/40 border border-gray-800/80 hover:bg-gray-800/80 transition">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-black text-xs w-5 text-center ${idx === 0 ? "text-emerald-400 text-sm" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-emerald-600" : "text-gray-600"}`}>#{idx + 1}</span>
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt={player.username} className="w-6 h-6 rounded-full border border-gray-700 object-cover" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-[9px] font-bold text-gray-300">{player.username.charAt(0)}</div>
+                          )}
+                          <p className="text-xs font-semibold text-gray-200">{player.username}</p>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-400">Nível {player.fortificacao}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-gray-500 text-center py-4">Nenhum reino.</p>
+                )}
+              </div>
             </div>
           </div>
 
